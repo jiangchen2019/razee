@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: List
+metadata:
+  name: razeedash-deployment
+  annotations:
+    version: "c417bf3a54af7e5c81a0796f15a0a41f40772f87"
+    razee.io/git-repo: "https://github.com/razee-io/Razeedash.git"
+    razee.io/commit-sha: "c417bf3a54af7e5c81a0796f15a0a41f40772f87"
+type: array
+items:
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      annotations:
+        version: "c417bf3a54af7e5c81a0796f15a0a41f40772f87"
+        razee.io/git-repo: "https://github.com/razee-io/Razeedash.git"
+        razee.io/commit-sha: "c417bf3a54af7e5c81a0796f15a0a41f40772f87"
+      labels:
+        razee/watch-resource: "lite"
+      name: razeedash
+      namespace: razee
+    spec:
+      replicas: 1
+      revisionHistoryLimit: 0
+      selector:
+        matchLabels:
+          app: razeedash
+          razee/watch-resource: "lite"
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          labels:
+            app: razeedash
+            razee/watch-resource: "lite"
+          name: razeedash
+        spec:
+          securityContext:
+            fsGroup: 999
+            runAsUser: 999
+          containers:
+          - env:
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: razeedash-secret
+                  key: mongo_url
+            - name: OAUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: razeedash-secret
+                  key: oauth_secret_key
+                  optional: true
+            - name: GITHUB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: github_url
+                  optional: true
+            - name: GITHUB_API
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: github_api
+                  optional: true
+            - name: BITBUCKET_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: bitbucket_url
+                  optional: true
+            - name: BITBUCKET_API
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: bitbucket_api
+                  optional: true
+            - name: MAIL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: mail_url
+                  optional: true
+            - name: ROOT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: root_url
+            - name: RAZEEDASH_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: razeedash_api_url
+                  optional: true
+            - name: LOGIN_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: razeedash-config
+                  key: login_type
+                  optional: true
+            - name: app_name
+              value: Razeedash
+            image: "quay.io/razee/razeedash:1.6.2"
+            workingDir: /app
+            imagePullPolicy: Always
+            name: razeedash
+            ports:
+            - containerPort: 3000
+              protocol: TCP
+            livenessProbe:
+              httpGet:
+                path: /login
+                port: 3000
+              initialDelaySeconds: 3
+              periodSeconds: 20
+              timeoutSeconds: 5
+              failureThreshold: 2
+            readinessProbe:
+              httpGet:
+                path: /login
+                port: 3000
+              initialDelaySeconds: 3
+              periodSeconds: 20
+            resources:
+              requests:
+                cpu: 100m
+                memory: 80Mi
+              limits:
+                cpu: 500m
+                memory: 256Mi
