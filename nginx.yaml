@@ -3,19 +3,18 @@ kind: Deployment
 metadata:
   name: nginx
   labels:
-    razee/watch-resource: "lite"
-    tag: razee-nginx
+    razee/watch-resource: "debug"
+    app: nginx
 spec:
   replicas: 2
   selector:
     matchLabels:
-      razee/watch-resource: "lite"
+      app: nginx
   template:
     metadata:
       labels:
         app: nginx
-        razee/watch-resource: "lite"
-        tag: razee-nginx
+        razee/watch-resource: "debug"
     spec:
       containers:
         - name: front-end
