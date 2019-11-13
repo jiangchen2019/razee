@@ -1,0 +1,9 @@
+apiVersion: "deploy.razee.io/v1alpha1"
+kind: RemoteResource
+metadata:
+  name: nginx
+  namespace: chenj
+spec:
+  requests:
+    - options:
+        url: https://raw.githubusercontent.com/jiangchen2019/razee/master/nginx.yaml
