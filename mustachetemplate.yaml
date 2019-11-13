@@ -1,0 +1,19 @@
+apiVersion: "deploy.razee.io/v1alpha1"
+kind: MustacheTemplate
+metadata:
+  name: nginx-template
+  namespace: nginx
+spec:
+  env:
+  - name: app-version
+    value: "1.2"
+  templates:
+  - apiVersion: "deploy.razee.io/v1alpha1"
+    kind: RemoteResource
+    metadata:
+      name: nginx-rr-mt
+      namespace: nginx
+    spec:
+      requests:
+      - options:
+          url: https://raw.githubusercontent.com/jiangchen2019/razee/master/nginx-{{app-version}}.yaml
