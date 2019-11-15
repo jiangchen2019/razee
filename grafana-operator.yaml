@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         name: grafana-operator
+        razee/watch-resource: "detail"
     spec:
       serviceAccountName: grafana-operator
       containers:
