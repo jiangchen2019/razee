@@ -5,21 +5,13 @@ metadata:
 type: array
 items:
   - apiVersion: v1
-    kind: Service
+    kind: ServiceAccount
     metadata:
       name: release-name-ibm-websphe
-      annotations:
       labels:
         chart: "ibm-websphere-liberty-1.10.0"
         app: release-name-ibm-websphe
         release: "release-name"
         heritage: "Tiller"
-    spec:  
-      type: NodePort
-      ports:
-      - port: 9443
-        targetPort: 9443
-        protocol: TCP
-        name: "https"
-      selector:
-        app: release-name-ibm-websphe
+    imagePullSecrets:
+      - name: sa-default
