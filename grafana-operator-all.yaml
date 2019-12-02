@@ -218,7 +218,7 @@ metadata:
   name: grafana-operator
   namespace: grafana-operator
   labels:
-    razee/watch-resource: "lite"
+    razee/watch-resource: "detail"
 spec:
   replicas: 1
   selector:
@@ -228,7 +228,7 @@ spec:
     metadata:
       labels:
         name: grafana-operator
-        razee/watch-resource: "lite"
+        razee/watch-resource: "detail"
     spec:
       serviceAccountName: grafana-operator
       containers:
