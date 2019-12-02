@@ -1,0 +1,303 @@
+# crds
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: grafanas.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: Grafana
+    listKind: GrafanaList
+    plural: grafanas
+    singular: grafana
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      required: ["spec"]
+      properties:
+        spec:
+          properties:
+            containers:
+              type: array
+              items:
+                type: object
+                description: Additional container to add to the grafana pod
+            secrets:
+              type: array
+              items:
+                type: string
+                description: Secret to be mounted as volume into the grafana deployment
+            configMaps:
+              type: array
+              items:
+                type: string
+                description: Config map to be mounted as volume into the grafana deployment
+            logLevel:
+              type: string
+              description: Log level of the grafana instance, defaults to info
+            adminUser:
+              type: string
+              description: Default admin user name
+            adminPassword:
+              type: string
+              description: Default admin password
+            basicAuth:
+              type: boolean
+              description: Basic auth enabled
+            disableLoginForm:
+              type: boolean
+              description: Disable login form
+            disableSignoutMenu:
+              type: boolean
+              description: Disable signout menu
+            anonymous:
+              type: boolean
+              description: Anonymous auth enabled
+            config:
+              type: object
+              description: Grafana config
+            ingress:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: Create an ingress / route
+                path:
+                  type: string
+                  description: Ingress path
+                hostname:
+                  type: string
+                  description: The hostname of the ingress / route
+                annotations:
+                  type: object
+                  description: Additional annotations for the ingress / route
+                labels:
+                  type: object
+                  description: Additional labels for the ingress / route
+            service:
+              type: object
+              properties:
+                annotations:
+                  type: object
+                  description: Additional annotations for the service
+                labels:
+                  type: object
+                  description: Additional labels for the service
+                type:
+                  type: string
+                  description: Service type (NodePort, ClusterIP or LoadBalancer)
+            dashboardLabelSelectors:
+              type: array
+              items:
+                type: object
+                description: Label selector or match expressions
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: grafanadatasources.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: GrafanaDataSource
+    listKind: GrafanaDataSourceList
+    plural: grafanadatasources
+    singular: grafanadatasource
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          required: ["datasources", "name"]
+          properties:
+            name:
+              type: string
+              minimum: 1
+            datasources:
+              type: array
+              items:
+                description: Grafana Datasource Object
+                type: object
+        status:
+          type: object
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: grafanadashboards.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: GrafanaDashboard
+    listKind: GrafanaDashboardList
+    plural: grafanadashboards
+    singular: grafanadashboard
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        status:
+          properties:
+            messages:
+              type: array
+              items:
+                description: Dashboard Status Message
+                type: object
+        spec:
+          properties:
+            name:
+              type: string
+            json:
+              type: string
+            plugins:
+              type: array
+              items:
+                description: Grafana Plugin Object
+                type: object
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-operator
+  namespace: grafana-operator
+imagePullSecrets:
+- name: entitled-registry
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: grafana-operator
+  namespace: grafana-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  - serviceaccounts
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+    - extensions
+  resources:
+    - ingresses
+  verbs:
+    - '*'
+- apiGroups:
+  - integreatly.org
+  resources:
+  - grafanas
+  - grafanadashboards
+  - grafanadatasources
+  - grafanas/finalizers
+  - grafanadashboards/finalizers
+  - grafanadatasources/finalizers
+  verbs:
+  - '*'
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: grafana-operator
+  namespace: grafana-operator
+subjects:
+- kind: ServiceAccount
+  name: grafana-operator
+roleRef:
+  kind: Role
+  name: grafana-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-operator
+  namespace: grafana-operator
+  labels:
+    razee/watch-resource: "debug"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: grafana-operator
+  template:
+    metadata:
+      labels:
+        name: grafana-operator
+        razee/watch-resource: "debug"
+    spec:
+      serviceAccountName: grafana-operator
+      containers:
+        - name: grafana-operator
+          image: cp.stg.icr.io/cp/om/grafana-operator:latest
+          args:
+            - '--grafana-image=cp.stg.icr.io/cp/om/origin-grafana'
+            - '--grafana-image-tag=latest'
+            - '--grafana-plugins-init-container-image=cp.stg.icr.io/cp/om/origin-grafana'
+            - '--grafana-plugins-init-container-tag=0.0.2'
+            - '--image-pull-secret=entitled-registry'
+          ports:
+          - containerPort: 60000
+            name: metrics
+          command:
+          - grafana-operator
+          imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
+          env:
+            - name: TEMPLATE_PATH
+              value: /usr/local/bin/templates
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "grafana-operator"
