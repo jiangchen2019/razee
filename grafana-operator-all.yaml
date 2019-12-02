@@ -134,6 +134,8 @@ kind: ServiceAccount
 metadata:
   name: grafana-operator
   namespace: grafana-operator
+  labels:
+    razee/watch-resource: "lite"
 imagePullSecrets:
 - name: entitled-registry
 ---
