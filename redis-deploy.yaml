@@ -12,7 +12,7 @@ spec:
       name: one
       labels:
         app: cloudnew
-        razee/watch-resource: "lite"
+        razee/watch-resource: "detail"
     spec:
       containers:
       - name: one
