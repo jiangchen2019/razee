@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudnew
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudnew
+  template:
+    metadata:
+      name: one
+      labels:
+        app: cloudnew
+        razee/watch-resource: "lite"
+    spec:
+      containers:
+      - name: one
+        image: redis
