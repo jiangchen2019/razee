@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: List
+metadata:
+  name: watch-keeper-deployment
+  annotations:
+    version: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+type: array
+items:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: razee
+      labels:
+        deploy.razee.io/mode: "EnsureExists"
+        deploy.razee.io/Reconcile: "false"
+      annotations:
+        razee.io/git-repo: "https://github.com/razee-io/Watch-keeper.git"
+        razee.io/commit-sha: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: cluster-reader
+      annotations:
+        razee.io/git-repo: "https://github.com/razee-io/Watch-keeper.git"
+        razee.io/commit-sha: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+    rules:
+    - apiGroups:
+      - '*'
+      resources:
+      - '*'
+      verbs: ["get", "list", "watch"]
+    - nonResourceURLs:
+      - '*'
+      verbs: ["get", "list", "watch"]
+
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: watch-keeper-sa
+      namespace: razee
+      annotations:
+        razee.io/git-repo: "https://github.com/razee-io/Watch-keeper.git"
+        razee.io/commit-sha: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: watch-keeper-rb
+      annotations:
+        razee.io/git-repo: "https://github.com/razee-io/Watch-keeper.git"
+        razee.io/commit-sha: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-reader
+    subjects:
+    - kind: ServiceAccount
+      name: watch-keeper-sa
+      namespace: razee
+
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: watch-keeper-deny-ingress
+      namespace: razee
+      annotations:
+        razee.io/git-repo: "https://github.com/razee-io/Watch-keeper.git"
+        razee.io/commit-sha: "2a53eb2f45a811dfce25180cd29975d18ae94f8c"
+    spec:
+      podSelector:
+        matchLabels:
+          app: watch-keeper
+      policyTypes:
+      - Ingress
+      ingress: []
+
